@@ -1,20 +1,15 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-Equiv="Cache-Control" Content="no-cache" />
-    <meta http-Equiv="Pragma" Content="no-cache" />
-    <meta http-Equiv="Expires" Content="0" />
+<head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <title>Insert title here</title>
-  </head>
-  <body>
-    <div>hello</div>
-  </body>
-  <script>
-    console.log('SimpleHtml script run.');
-    console.error(window);
-  </script>
+</head>
+<body>
+<div id="ua">User-Agent:</div>
+</body>
+<script>
+    console.log('SimpleHtml script running, window:', window);
+    document.getElementById('ua').innerText = 'User-Agent: ' + window.navigator.userAgent;
+</script>
 </html>
-
-
