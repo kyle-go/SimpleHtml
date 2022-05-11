@@ -42,7 +42,7 @@
     }
     console.log('Old cookie:' + getCookie('test'));
 
-    setCookie("test","DateTime:" + Date.now(),1800); //设置cookie的值，生存时间半个小时
+    setCookie("test","DateTime:" + new Date(), 12*60*60); //设置cookie的值，生存时间12小时
     console.log('SimpleHtml script running, window:', window);
     document.getElementById('ua').innerText = 'User-Agent: ' + window.navigator.userAgent;
 </script>
