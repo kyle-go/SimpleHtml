@@ -10,135 +10,39 @@
 </body>
    <script>
     (function() {
-    if (window.WKWebViewJavascriptBridge) {
-        return;
-    }
+        function isMac() {
+    return navigator.userAgent.includes('Mac');
+}
+function setupWKWebViewJavascriptBridge(callback) {
+ if (isMac()){
+   if (!window.WKWebViewJavascriptBridge) {
+     throw new Error('must be inject macOsInject.js');
+   }
+   return callback(window.WKWebViewJavascriptBridge)
+ }
+ if (window.WKWebViewJavascriptBridge) {
+   return callback(window.WKWebViewJavascriptBridge);
+ }
+ if (window.WKWVJBCallbacks) {
+   return window.WKWVJBCallbacks.push(callback);
+ }
+ window.WKWVJBCallbacks = [callback];
+ window.webkit.messageHandlers.iOS_Native_InjectJavascript.postMessage(null)
+}
 
-    if (!window.onerror) {
-        window.onerror = function(msg, url, line) {
-            console.log("WKWebViewJavascriptBridge: ERROR:" + msg + "@" + url + ":" + line);
-        }
-    }
-    window.WKWebViewJavascriptBridge = {
-        registerHandler: registerHandler,
-        callHandler: callHandler,
-        _fetchQueue: _fetchQueue,
-        _handleMessageFromiOS: _handleMessageFromiOS
-    };
+if (isMac()){
+   // 注意：此函数需要引入 macOsInject.js 后才生效。
+   macOsInjectWKWebViewJavascriptBridge(setupWKWebViewJavascriptBridge);
 
-    var sendMessageQueue = [];
-    var messageHandlers = {};
+   // 初始化 title
+   setupWKWebViewJavascriptBridge(function(bridge) {
+    bridge.callHandler('getMiniProgramToken',{}, function(response) {
+        console.error(response)
+    })
+    });    
+}
 
-    var responseCallbacks = {};
-    var uniqueId = 1;
 
-    function registerHandler(handlerName, handler) {
-        messageHandlers[handlerName] = handler;
-    }
-
-    function callHandler(handlerName, data, responseCallback) {
-        if (arguments.length == 2 && typeof data == 'function') {
-            responseCallback = data;
-            data = null;
-        }
-        _doSend({ handlerName:handlerName, data:data }, responseCallback);
-    }
-
-    function _doSend(message, responseCallback) {
-        if (responseCallback) {
-            var callbackID = 'cb_'+(uniqueId++)+'_'+new Date().getTime();
-            responseCallbacks[callbackID] = responseCallback;
-            message['callbackID'] = callbackID;
-        }
-        sendMessageQueue.push(message);
-        window.webkit.messageHandlers.iOS_Native_FlushMessageQueue.postMessage(null)
-    }
-
-    function _fetchQueue() {
-        var messageQueueString = JSON.stringify(sendMessageQueue);
-        sendMessageQueue = [];
-        return messageQueueString;
-    }
-
-    function _dispatchMessageFromiOS(messageJSON) {
-        var message = JSON.parse(messageJSON);
-        var messageHandler;
-        var responseCallback;
-
-        if (message.responseID) {
-            responseCallback = responseCallbacks[message.responseID];
-            if (!responseCallback) {
-                return;
-            }
-            responseCallback(message.responseData);
-            delete responseCallbacks[message.responseID];
-        } else {
-            if (message.callbackID) {
-                var callbackResponseId = message.callbackID;
-                responseCallback = function(responseData) {
-                    _doSend({ handlerName:message.handlerName, responseID:callbackResponseId, responseData:responseData });
-                };
-            }
-
-            var handler = messageHandlers[message.handlerName];
-            if (!handler) {
-                console.log("WKWebViewJavascriptBridge: WARNING: no handler for message from iOS:", message);
-            } else {
-                handler(message.data, responseCallback);
-            }
-        }
-    }
-
-    function _handleMessageFromiOS(messageJSON) {
-        _dispatchMessageFromiOS(messageJSON);
-    }
-
-    setTimeout(_callWVJBCallbacks, 0);
-    function _callWVJBCallbacks() {
-        var callbacks = window.WKWVJBCallbacks;
-        delete window.WKWVJBCallbacks;
-        for (var i = 0; i < callbacks.length; i++) {
-            callbacks[i](WKWebViewJavascriptBridge);
-        }
-    }
 })();
-</script>
-<script>
-    // 取得cookie
-    function getCookie(name) {
-        var nameEQ = name + '='
-        var ca = document.cookie.split(';') // 把cookie分割成组
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i] // 取得字符串
-            while (c.charAt(0) == ' ') { // 判断一下字符串有没有前导空格
-                c = c.substring(1, c.length) // 有的话，从第二位开始取
-            }
-            if (c.indexOf(nameEQ) == 0) { // 如果含有我们要的name
-                return unescape(c.substring(nameEQ.length, c.length)) // 解码并截取我们要值
-            }
-        }
-        return false
-    }
-    // 清除cookie
-    function clearCookie(name) {
-        setCookie(name, "", -1);
-    }
-
-    // 设置cookie
-    function setCookie(name, value, seconds) {
-        seconds = seconds || 0;   //seconds有值就直接赋值，没有为0，这个根php不一样。
-        var expires = "";
-        if (seconds != 0 ) {      //设置cookie生存时间
-            var date = new Date();
-            date.setTime(date.getTime()+(seconds*1000));
-            expires = "; expires="+date.toGMTString();
-        }
-        document.cookie = name+"="+escape(value)+expires+"; path=/";   //转码并赋值
-    }
-    console.log('Old cookie:' + getCookie('test'));
-
-    setCookie("test","DateTime:" + new Date(), 12*60*60); //设置cookie的值，生存时间12小时
-    console.log('SimpleHtml script running, window:', window);
-    document.getElementById('ua').innerText = 'User-Agent: ' + window.navigator.userAgent;
 </script>
 </html>
