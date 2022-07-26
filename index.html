@@ -32,7 +32,7 @@ function setupWKWebViewJavascriptBridge(callback) {
 
 if (isMac()){
    // 注意：此函数需要引入 macOsInject.js 后才生效。
-   macOsInjectWKWebViewJavascriptBridge(setupWKWebViewJavascriptBridge);
+   window.ipcAPI.macOsInjectWKWebViewJavascriptBridge(setupWKWebViewJavascriptBridge);
 
    // 初始化 title
    setupWKWebViewJavascriptBridge(function(bridge) {
