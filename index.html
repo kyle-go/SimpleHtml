@@ -36,11 +36,15 @@ if (isMac()){
    window.macOsInjectWKWebViewJavascriptBridge(setupWKWebViewJavascriptBridge);
 
    // 初始化 title
-   setupWKWebViewJavascriptBridge(function(bridge) {
-    bridge.callHandler('getMiniProgramToken',{}, function(response) {
-        console.error(response)
-    })
-    });    
+//    setupWKWebViewJavascriptBridge(function(bridge) {
+//     bridge.callHandler('getMiniProgramToken',{}, function(response) {
+//         console.error(response)
+//     })
+//     });   
+    
+    window.WKWebViewJavascriptBridge.callHandler('getMiniProgramToken',{}, function(response) {
+         console.error('$$$:###:' + response)
+     })
 }
 
 
