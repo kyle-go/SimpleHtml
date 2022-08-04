@@ -32,19 +32,15 @@ function setupWKWebViewJavascriptBridge(callback) {
 }
 
 if (isMac()){
-   // 注意：此函数需要引入 macOsInject.js 后才生效。
+   // 注意：iframe环境，此函数需要引入 macOsInject.js 后才生效。
    window.macOsInjectWKWebViewJavascriptBridge(setupWKWebViewJavascriptBridge);
 
-   // 初始化 title
-//    setupWKWebViewJavascriptBridge(function(bridge) {
-//     bridge.callHandler('getMiniProgramToken',{}, function(response) {
-//         console.error(response)
-//     })
-//     });   
-    
-    window.WKWebViewJavascriptBridge.callHandler('getMiniProgramToken',{}, function(response) {
-         console.error('$$$:###:' + response)
-     })
+   // get token
+   setupWKWebViewJavascriptBridge(function(bridge) {
+    bridge.callHandler('getMiniProgramToken',{}, function(response) {
+        console.error(response)
+    })
+    });   
 }
 
 
