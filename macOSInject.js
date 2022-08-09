@@ -1,5 +1,5 @@
 console.log('load macOInject.js')
-if (!window.macOsInjectWKWebViewJavascriptBridge){
+if (!window.macOsInjectWKWebViewJavascriptBridge && navigator.userAgent.includes('Mac')){
   console.log('iframe init jsBridge')
 
   const TARGET_ORIGIN = "file://*";
