@@ -67,8 +67,6 @@ if (!window.macOsInjectWKWebViewJavascriptBridge && navigator.userAgent.includes
     if (window.localTimer) {
       clearInterval(window.localTimer);
     }
-
-    window.WKWVJBCallbacks = {};
     const callbackid = new Date().getTime().toString();
     const message = {
       params,
@@ -89,7 +87,9 @@ if (!window.macOsInjectWKWebViewJavascriptBridge && navigator.userAgent.includes
         if (window.WKWVJBCallbacks[callbackid]){
           clearInterval(timer);
           console.log('get postmessage data,clear local interval timer, timer_id : ' + timer.toString());
-          resolve(window.WKWVJBCallbacks[callbackid]);
+          const result = window.WKWVJBCallbacks[callbackid]
+          window.WKWVJBCallbacks[callbackid] = undefined;
+          resolve(result);
         }
       },100);
     });
