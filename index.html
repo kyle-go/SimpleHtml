@@ -41,6 +41,13 @@ if (isMac()){
         console.error(response)
     })
     });   
+    
+   // get theme
+   setupWKWebViewJavascriptBridge(function(bridge) {
+    bridge.callHandler('getTheme',{}, function(response) {
+        console.error(response)
+    })
+    });   
 }
 
 
