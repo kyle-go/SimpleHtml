@@ -1,49 +1,45 @@
-console.log('load macOInject.js')
-if (!window.macOsInjectWKWebViewJavascriptBridge && navigator.userAgent.includes('Mac')){
+console.log('load macOInject.js v220902');
+if (!window.macOsInjectWKWebViewJavascriptBridge && /Mac OS X /.test(window.navigator.userAgent)){
   console.log('iframe init jsBridge')
 
   const TARGET_ORIGIN = "file://*";
   // 初始化
   window.macOsInjectWKWebViewJavascriptBridge = function(func){
     window.WKWVJBCallbacks = {}
-    console.log('WKWVJBCallbacks init done.');
-    window.localTimer = 0
-    console.log('localTimer init done.');
+    window.localTimer = {};
     window.onmessage = handelMessage;
     window.WKWebViewJavascriptBridge = {
       callHandler: callHandler,
     };
-    console.log('WKWebViewJavascriptBridge init done.');
     window.setupWKWebViewJavascriptBridge = func;
   }
+
   // 处理postmessage回调
   function handelMessage(e){
-    // TODO 接收的消息 origin 校验
-    if (!e.origin || e.origin.length === 0) {
-      clearInterval(window.localTimer);
-      alert('Receive Message Origin Is Undefined!');
-      return;
-    }
-    if (e.origin !== "file://") {
-      clearInterval(window.localTimer);
-      alert('Receive Unknown Origin Message!');
-      return ;
-    }
-
-    console.log('iframe receive postmessage data: ' + JSON.stringify(e.data));
     const { callbackid, response } = e.data || {}
     const { status } = response || {}
 
+    if (!e.origin || e.origin.length === 0) {
+      if (window.localTimer[callbackid]) clearInterval(window.localTimer[callbackid]);
+      console.error('Receive Message Origin Is Undefined!');
+      return;
+    }
+    if (e.origin !== "file://") {
+      if (window.localTimer[callbackid]) clearInterval(window.localTimer[callbackid]);
+      console.error('Receive Unknown Origin Message!');
+      return ;
+    }
+    console.log('iframe receive postmessage data: ' + JSON.stringify(e.data));
+
     if (!status) {
       console.log('receive data no status information.');
-      clearInterval(window.localTimer);
-      console.log('clear local Interval timer, timer_id: ' + window.localTimer.toString());
-      alert('error postmessage data receive!');
+      if (window.localTimer[callbackid]) clearInterval(window.localTimer[callbackid]);
+      console.error('error postmessage data receive!');
       return;
     }
 
     if (!callbackid || callbackid.length === 0) {
-      clearInterval(window.localTimer);
+      if (window.localTimer[callbackid]) clearInterval(window.localTimer[callbackid]);
       console.log('clear local Interval timer, timer_id: ' + window.localTimer.toString());
     }
 
@@ -63,35 +59,34 @@ if (!window.macOsInjectWKWebViewJavascriptBridge && navigator.userAgent.includes
 
   // postmessage
   async function postmessage(methodName, params) {
-    // 极端 或 未知异常的情况下 定时器没有清除，这边每次请求 都清一次定时器。
-    if (window.localTimer) {
-      clearInterval(window.localTimer);
-    }
-    const callbackid = new Date().getTime().toString();
+    const callbackid = uuid();
     const message = {
       params,
       callbackid,
       methodName,
     }
-
     window.top.postMessage(
-      message,
-      TARGET_ORIGIN
+        message,
+        TARGET_ORIGIN
     );
-    console.log('post request data:' + JSON.stringify(message) + ' & targetOrigin:' + TARGET_ORIGIN);
-
+    console.log('post request data:' + JSON.stringify(message) + ' && targetOrigin:' + TARGET_ORIGIN);
     return new Promise((resolve)=>{
-      const timer = setInterval(()=>{
-        window.localTimer = timer;
-        console.log('into Interval timer,timer_id: ' + timer.toString());
+      window.localTimer[callbackid] = setInterval(()=>{
         if (window.WKWVJBCallbacks[callbackid]){
-          clearInterval(timer);
-          console.log('get postmessage data,clear local interval timer, timer_id : ' + timer.toString());
+          if (window.localTimer[callbackid]) clearInterval(window.localTimer[callbackid]);
           const result = window.WKWVJBCallbacks[callbackid]
           window.WKWVJBCallbacks[callbackid] = undefined;
           resolve(result);
         }
       },100);
+    });
+  }
+
+  function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16 | 0,
+          v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
     });
   }
 }
