@@ -11,8 +11,8 @@
 </body>
    <script>
     (function() {
-        function isMac() {
-    return navigator.userAgent.includes('Mac');
+        function isMac() {  
+            return /Mac OS X /.test(window.navigator.userAgent);
 }
 function setupWKWebViewJavascriptBridge(callback) {
  if (isMac()){
